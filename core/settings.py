@@ -43,7 +43,10 @@ INSTALLED_APPS = [
 
     'rest_framework',
     'corsheaders',
-    'health_professionals'
+
+    'health_professionals',
+    'appointments',
+
 ]
 
 MIDDLEWARE = [

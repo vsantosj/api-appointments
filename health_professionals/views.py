@@ -1,7 +1,7 @@
 from rest_framework import generics
+from drf_spectacular.utils import extend_schema
 from health_professionals.models import HealthProfessional
 from health_professionals.serializers import HealthProfessionalSerializers
-from drf_spectacular.utils import extend_schema
 
 
 @extend_schema(tags=['Profissionais'])
