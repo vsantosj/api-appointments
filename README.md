@@ -19,56 +19,34 @@
 #### Setup do ambiente
 
 #### Pré-requisitos
-* Docker e Docker Compose instalados.
-* Git para clonagem.
-* Arquivo .env.dev configurado na pasta dotenv_files/.
+
+- Docker e Docker Compose instalados.
+- Git para clonagem.
+- Arquivo .env.dev configurado na pasta dotenv_files/.
+
 #### Configuração Inicial
+
 a. Clone o repositório:
+
 ```
 git clone <url-do-repositorio>
 cd api-appointments
+
+# instalar as dependências do projeto
+poetry install
 ```
+
 b. Configure as variáveis de ambiente: Crie o arquivo .env.dev dentro da pasta dotenv_files/ seguindo o modelo do .env.example.
 
 ### Instruções para Rodar o Projeto
 
-#### Rodar docker
+#### a. Rodar com docker
+
 ```
 docker compose up -d --build
 ```
 
-
-### Testes Automatizados
-
-#### Testes no docker 
-```
-docker compose exec api python manage.py test
-```
-
-#### Testes sem docker(Local)
-```
-cd api-drf
-poetry run python manage.py test
-```
-### Decisões Técnicas
-
-
-### Deploy e CI/CD
-Embora o foco atual seja o ambiente local, a estrutura foi preparada para produção:
-
-* GitHub Actions: Configuração de workflow em ```.github/workflows/ci-cd.yml``` para validação de código (Pylint) e testes em cada commit.
-
-* Configuração de Produção: Arquivo ```docker-compose.prod.yml``` pronto para ser utilizado com Nginx como Proxy Reverso em instâncias AWS EC2.
-
-### Erros Encontrados e Soluções
-
-
-
-### Melhorias Propostas
-* **Deploy na AWS**: Realizar o deploy da infraestrutura em uma instância EC2, utilizando o docker-compose.prod.yml e configurando o Nginx como Proxy Reverso.
-* **Cache com Redis**: Integrar o Redis para cachear consultas frequentes, como a listagem de profissionais de saúde, melhorando o tempo de resposta da API.
-
-### Acesse a Aplicação
+#### b. Acesse a Aplicação
 
 Após rodar aplicação com sucesso:
 acesse:
@@ -77,11 +55,44 @@ acesse:
 - ReDoc: http://localhost:8000/api/redoc/
 - Admin: http://localhost:8000/admin/
 
+Login de acesso:
+
+```
+{
+  "username": "admin",
+  "password": "sua_senha_segura"
+}
+```
+
+### Testes Automatizados
+
+#### Testes no docker
+
+```
+docker compose exec api python manage.py test
+```
+
+### Decisões Técnicas
+
+### Deploy e CI/CD
+
+Embora o foco atual seja o ambiente local, a estrutura foi preparada para produção:
+
+- GitHub Actions: Configuração de workflow em `.github/workflows/ci-cd.yml` para validação de código (Pylint) e testes em cada commit.
+
+- Configuração de Produção: Arquivo `docker-compose.prod.yml` pronto para ser utilizado com Nginx como Proxy Reverso em instâncias AWS EC2.
+
+### Erros Encontrados e Soluções
+
+### Melhorias Propostas
+
+- **Deploy na AWS**: Realizar o deploy da infraestrutura em uma instância EC2, utilizando o docker-compose.prod.yml e configurando o Nginx como Proxy Reverso.
+- **Cache com Redis**: Integrar o Redis para cachear consultas frequentes, como a listagem de profissionais de saúde, melhorando o tempo de resposta da API.
+
 #### Credenciais padrão:
 
 Username: admin <br>
 Password: admin123
-
 
 ### Agradecimentos
 
