@@ -11,10 +11,9 @@
 3. Testes Automatizados
 4. Decisões Técnicas
 5. Deploy e CI/CD
-6. Erros Encontrados e Soluções
-7. Melhorias Propostas
-8. Agradecimentos
-9. Como Contribuir com o projeto
+6. Melhorias Propostas
+7. Agradecimentos
+8. Como Contribuir com o projeto
 
 ### 1. Setup do ambiente
 
@@ -191,20 +190,18 @@ TEMPO TOTAL (com deploy): ~7-10 minutos
 
 ---
 
-### 6. Erros Encontrados e Soluções
-
-### 7. Melhorias Propostas
+### 6. Melhorias Propostas
 
 - **Deploy na AWS**: Realizar o deploy da infraestrutura em uma instância EC2, utilizando o docker-compose.prod.yml e configurando o Nginx como Proxy Reverso.
 - **Cache com Redis**: Integrar o Redis para cachear consultas frequentes, como a listagem de profissionais de saúde, melhorando o tempo de resposta da API.
 
-### 8. Agradecimentos
+### 7. Agradecimentos
 
 Meu sincero agradecimento à Lacrei Saúde pela oportunidade de aprendizado e desenvolvimento. Este projeto foi fundamental para consolidar meus conhecimentos em infraestrutura moderna e automação. É uma honra poder apoiar tecnicamente uma ONG que realiza um trabalho tão vital para a comunidade.
 
 🏳️‍🌈 Conheça o projeto: https://lacreisaude.com.br/
 
-### 9. 🤝 Como Contribuir com o projeto
+### 8. 🤝 Como Contribuir com o projeto
 
 Quer contribuir com a api de agendamentos? Toda ajuda é bem-vinda! Aqui estão algumas formas de colaborar:
 
