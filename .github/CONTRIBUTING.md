@@ -1,4 +1,4 @@
-# 🙌 Guia de Contribuição para o SIXAI Chatbot
+# 🙌 Guia de Contribuição para a API de Agendamentos
 
 Obrigado por considerar contribuir com o **Api de agendamentos**! 🎉  
 Este projeto foi desenvolvido por [viviane Santos](https://www.linkedin.com/in/vsantosj/) com foco em soluções de **impacto social** usando **Django + DRF**. Toda ajuda é bem-vinda!
