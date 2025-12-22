@@ -1,0 +1,59 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: lacrei-postgres-dev
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-lacrei_db}
+      POSTGRES_USER: ${POSTGRES_USER:-lacrei_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-lacrei_password}
+    volumes:
+      - postgres_data_dev:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_USER:-lacrei_user} -d ${POSTGRES_DB:-lacrei_db}",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - lacrei-network
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: lacrei-api-dev
+    restart: unless-stopped
+    entrypoint: /entrypoint.sh
+    volumes:
+      - ./api-drf:/app
+      - static_volume_dev:/data/api/static
+      - media_volume_dev:/data/api/media
+      - ./logs:/app/api-drf/logs
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./dotenv_files/.env.dev
+    environment:
+      DEBUG: "1"
+      POSTGRES_HOST: db
+      POSTGRES_PORT: "5432"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - lacrei-network
+
+volumes:
+  postgres_data_dev:
+  static_volume_dev:
+  media_volume_dev:
+
+networks:
+  lacrei-network:
+    driver: bridge

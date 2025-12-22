@@ -1,0 +1,35 @@
+# Git
+.git
+.gitignore
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Ambientes Virtuais
+.venv
+venv
+ENV
+.python-version
+
+# Banco de Dados Local (SQLite)
+*.sqlite3
+
+# Logs e Segredos
+*.log
+.env
+errors.log
+
+# Docker
+docker-compose.yml
+Dockerfile
+.dockerignore
+
+# Documentação/IDE
+.vscode/
+.idea/
+README.md

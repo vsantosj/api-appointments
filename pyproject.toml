@@ -1,39 +1,27 @@
-[project]
+[tool.poetry]
 name = "api-appointments"
 version = "0.1.0"
 description = "API REST para gestão de profissionais de saúde e consultas"
-authors = [
-    {name = "viviane santos",email = "vjsantos.viviane@gmail.com"}
-]
+authors = ["viviane santos <vjsantos.viviane@gmail.com>"]
 
-license = {text = "MIT"}
-readme = "README.md"
-requires-python = ">=3.12"
-dependencies = [
-    "django (>=6.0,<7.0)",
-    "djangorestframework (>=3.16.1,<4.0.0)",
-    "psycopg2-binary (>=2.9.11,<3.0.0)",
-    "python-decouple (>=3.8,<4.0)",
-    "django-cors-headers (>=4.9.0,<5.0.0)",
-    "drf-spectacular (>=0.29.0,<0.30.0)",
-    "drf-spectacular-sidecar (>=2025.12.1,<2026.0.0)",
-    "django-filter (>=25.2,<26.0)",
-    "djangorestframework-simplejwt (>=5.5.1,<6.0.0)"
-]
+[tool.poetry.dependencies]
+python = ">=3.12"
+django = ">=6.0,<7.0"
+djangorestframework = ">=3.16.1"
+psycopg2-binary = ">=2.9.11"
+python-decouple = ">=3.8"
+django-cors-headers = ">=4.9.0"
+drf-spectacular = ">=0.29.0"
+drf-spectacular-sidecar = ">=2025.12.1"
+django-filter = ">=25.2"
+djangorestframework-simplejwt = ">=5.5.1"
 
+[tool.poetry.group.dev.dependencies]
+pytest = ">=9.0.2"
+pytest-django = ">=4.11.1"
+pylint = ">=4.0.4"
+black = ">=25.12.0"
 
 [build-system]
-requires = ["poetry-core>=2.0.0,<3.0.0"]
+requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
-
-[dependency-groups]
-dev = [
-    "pytest (>=9.0.2,<10.0.0)",
-    "pytest-django (>=4.11.1,<5.0.0)",
-    "pylint (>=4.0.4,<5.0.0)",
-    "black (>=25.12.0,<26.0.0)"
-]
-
-
-[tool.poetry]
-package-mode = false

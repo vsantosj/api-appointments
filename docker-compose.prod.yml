@@ -1,0 +1,72 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: lacrei-postgres-prod
+    restart: always
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data_prod:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - lacrei-network-prod
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: lacrei-api-prod
+    restart: always
+    entrypoint: /entrypoint.sh
+    volumes:
+      - ./scripts:/app/scripts:ro
+      - static_volume_prod:/data/api/static
+      - media_volume_prod:/data/api/media
+      - ./logs:/app/api-drf/logs
+    expose:
+      - 8000
+    env_file:
+      - ./dotenv_files/.env.prod
+    environment:
+      DEBUG: "0"
+      POSTGRES_HOST: db
+      POSTGRES_PORT: "5432"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - lacrei-network-prod
+
+  nginx:
+    image: nginx:alpine
+    container_name: lacrei-nginx-prod
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - static_volume_prod:/data/api/static:ro
+      - media_volume_prod:/data/api/media:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - api
+    networks:
+      - lacrei-network-prod
+
+volumes:
+  postgres_data_prod:
+  static_volume_prod:
+  media_volume_prod:
+  logs_prod:
+
+networks:
+  lacrei-network-prod:
+    driver: bridge
