@@ -1,4 +1,3 @@
-# Imagem base - Python slim para reduzir tamanho
 FROM python:3.12-slim
 
 # Metadados
