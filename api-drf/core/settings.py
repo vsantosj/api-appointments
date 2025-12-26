@@ -1,6 +1,7 @@
 from pathlib import Path
 import os
 from django.core.exceptions import ImproperlyConfigured
+from datetime import timedelta
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -38,6 +39,7 @@ INSTALLED_APPS = [
 
     'rest_framework',
     'rest_framework_simplejwt',
+    'rest_framework_simplejwt.token_blacklist'
     'corsheaders',
 
     'health_professionals',
@@ -160,10 +162,24 @@ REST_FRAMEWORK = {
     ],
 }
 
+#CONFIGURAÇÃO DE JWT
+# Define tempo de vida dos tokens de autenticação
 
-# === CONFIGURAÇÃO DE CORS ===
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),  # Token expira em 1 hora
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),     # Refresh expira em 1 dia
+    'ROTATE_REFRESH_TOKENS': True,                   # Gera novo refresh a cada uso
+    'BLACKLIST_AFTER_ROTATION': True,                # Invalida refresh antigo
+    'UPDATE_LAST_LOGIN': True,                       # Atualiza último login
+    
+    'ALGORITHM': 'HS256',
+    'SIGNING_KEY': SECRET_KEY,
+    'AUTH_HEADER_TYPES': ('Bearer',),
+}
+
+
+#CONFIGURAÇÃO DE CORS
 # Permite requisições de origens específicas para proteger dados sensíveis de saúde
-# Em produção, definir apenas os domínios oficiais da Lacrei Saúde
 
 if DEBUG:
     # Desenvolvimento: permite localhost nas portas comuns de frontend
