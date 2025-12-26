@@ -160,6 +160,52 @@ REST_FRAMEWORK = {
     ],
 }
 
+
+# === CONFIGURAÇÃO DE CORS ===
+# Permite requisições de origens específicas para proteger dados sensíveis de saúde
+# Em produção, definir apenas os domínios oficiais da Lacrei Saúde
+
+if DEBUG:
+    # Desenvolvimento: permite localhost nas portas comuns de frontend
+    CORS_ALLOWED_ORIGINS = [
+        "http://localhost:3000",  # React/Next.js padrão
+        "http://localhost:5173",  # Vite padrão
+        "http://127.0.0.1:3000",
+        "http://127.0.0.1:5173",
+    ]
+else:
+    # Produção: apenas domínios oficiais
+    CORS_ALLOWED_ORIGINS = [
+        h.strip() for h in os.getenv('CORS_ALLOWED_ORIGINS', '').split(',')
+        if h.strip()
+    ]
+
+# Permite envio de cookies e credenciais (necessário para JWT e sessões)
+CORS_ALLOW_CREDENTIALS = True
+
+# Métodos HTTP permitidos (adicione conforme necessário)
+CORS_ALLOW_METHODS = [
+    'DELETE',
+    'GET',
+    'OPTIONS',
+    'PATCH',
+    'POST',
+    'PUT',
+]
+
+# Headers que o frontend pode enviar
+CORS_ALLOW_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+]
+
 # Configurações da documentação swagger
 SPECTACULAR_SETTINGS = {
     'TITLE': 'API de Agendamentos',
