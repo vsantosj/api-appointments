@@ -39,7 +39,7 @@ INSTALLED_APPS = [
 
     'rest_framework',
     'rest_framework_simplejwt',
-    'rest_framework_simplejwt.token_blacklist'
+    'rest_framework_simplejwt.token_blacklist',
     'corsheaders',
 
     'health_professionals',
@@ -269,6 +269,13 @@ LOGGING = {
             'filename': LOGS_DIR / 'django_access.log',
             'formatter': 'simple',
         },
+        # NOVO: Log específico para appointments e profissionais
+        'file_app': {
+            'level': 'INFO',
+            'class': 'logging.FileHandler',
+            'filename': LOGS_DIR / 'app.log',
+            'formatter': 'verbose',
+        },
     },
     'loggers': {
         'django': {
@@ -285,6 +292,22 @@ LOGGING = {
             'handlers': ['console', 'file_errors'],
             'level': 'INFO',
             'propagate': True,
+        },
+        # NOVO: Logs dos seus apps
+        'appointments': {
+            'handlers': ['console', 'file_app'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'health_professionals': {
+            'handlers': ['console', 'file_app'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'authentication': {
+            'handlers': ['console', 'file_app'],
+            'level': 'INFO',
+            'propagate': False,
         },
     },
 }

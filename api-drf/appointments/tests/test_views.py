@@ -1,232 +1,247 @@
+from django.urls import reverse
 from rest_framework.test import APITestCase
-from rest_framework import status
 from django.contrib.auth.models import User
-from appointments.models import Appointments
+from rest_framework import status
+from datetime import date, timedelta
 from health_professionals.models import HealthProfessional
-from datetime import date
-from rest_framework_simplejwt.tokens import RefreshToken
+from appointments.models import Appointments
 
 
-class AppointmentsCRUDTest(APITestCase):
+class AppointmentsTestCase(APITestCase):
 
-    
     def setUp(self):
-        self.user = User.objects.create_user(
-            username='testuser',
-            password='testpass123',
-            email='test@example.com'
+        self.normal_user = User.objects.create_user(
+            username='userTest', 
+            password='userPass'
         )
-        refresh = RefreshToken.for_user(self.user)
-        self.token = str(refresh.access_token)
-        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.token}')
 
-        self.professional = HealthProfessional.objects.create(
-            social_name='Dra. Maria Santos',
+        self.health_professional = HealthProfessional.objects.create(
+            social_name='Dra. Ana Silva',
             profession='Psicóloga',
-            address='Av. Paulista, 1000',
-            contact='11988888888'
+            address='Rua das Flores, 123',
+            contact='(11) 99999-9999'
         )
         
-        self.list_create_url = '/api/v1/appointments/'
-    
-    def get_detail_url(self, pk):
-        return f'/api/v1/appointments/{pk}/'
+        self.future_date = date.today() + timedelta(days=5)
+        self.appointment = Appointments.objects.create(
+            date=self.future_date,
+            health_professional=self.health_professional
+        )
+        
+        self.url = reverse('appointments-detail-view', kwargs={'pk': self.appointment.pk})
+        self.list_url = reverse('appointments-create-list')
 
+    # TEST CREATE
     
     def test_create_appointment_success(self):
+        self.client.force_authenticate(user=self.normal_user)
         data = {
-            'date': '2025-12-30',
-            'health_professional': self.professional.id
+            "date": str(date.today() + timedelta(days=10)),
+            "health_professional": self.health_professional.id
         }
-        response = self.client.post(self.list_create_url, data, format='json')
+        
+        response = self.client.post(self.list_url, data, format='json')
         
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(Appointments.objects.count(), 1)
-        self.assertEqual(response.data['date'], '2025-12-30')
+        self.assertEqual(response.data['health_professional'], self.health_professional.id)
+        self.assertEqual(Appointments.objects.count(), 2)
     
-    def test_create_appointment_missing_fields(self):
-        """Testa criar consulta sem campos obrigatórios"""
-        # Sem data
-        response = self.client.post(
-            self.list_create_url,
-            {'health_professional': self.professional.id},
-            format='json'
-        )
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn('date', response.data)
+    def test_create_appointment_with_missing_fields(self):
+        self.client.force_authenticate(user=self.normal_user)
         
-        # Sem profissional
-        response = self.client.post(
-            self.list_create_url,
-            {'date': '2025-12-30'},
-            format='json'
-        )
+        data = {
+            "date": str(date.today() + timedelta(days=10))
+        }
+        
+        response = self.client.post(self.list_url, data, format='json')
+        
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('health_professional', response.data)
     
-    def test_create_appointment_invalid_data(self):
-        """Testa criar consulta com dados inválidos"""
-        # Data em formato errado
-        response = self.client.post(
-            self.list_create_url,  
-            {
-                'date': '30/12/2025',
-                'health_professional': self.professional.id
-            },
-            format='json'
-        )
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+    def test_create_appointment_with_past_date(self):
+        self.client.force_authenticate(user=self.normal_user)
         
-        # Profissional inexistente
-        response = self.client.post(
-            self.list_create_url,
-            {
-                'date': '2025-12-30',
-                'health_professional': 99999
-            },
-            format='json'
-        )
+        past_date = date.today() - timedelta(days=5)
+        data = {
+            "date": str(past_date),
+            "health_professional": self.health_professional.id
+        }
+        
+        response = self.client.post(self.list_url, data, format='json')
+        
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
     
-    def test_create_appointment_without_authentication(self):
-        """Testa criar consulta sem autenticação"""
-        self.client.credentials()  # Remove token
+    def test_create_duplicate_appointment(self):
+        self.client.force_authenticate(user=self.normal_user)
         
         data = {
-            'date': '2025-12-30',
-            'health_professional': self.professional.id
+            "date": str(self.future_date),
+            "health_professional": self.health_professional.id
         }
-        response = self.client.post(self.list_create_url, data, format='json')
         
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        response = self.client.post(self.list_url, data, format='json')
+        
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    # TEST GET
     
-    def test_list_appointments(self):
-        """Testa listar todas as consultas"""
-        # Cria 3 consultas
-        Appointments.objects.create(date=date(2025, 12, 25), health_professional=self.professional)
-        Appointments.objects.create(date=date(2025, 12, 26), health_professional=self.professional)
-        Appointments.objects.create(date=date(2025, 12, 27), health_professional=self.professional)
+    def test_list_appointments_success(self):
+        #Teste de listagem de agendamentos
+        self.client.force_authenticate(user=self.normal_user)
         
-        response = self.client.get(self.list_create_url)
+        response = self.client.get(self.list_url)
         
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 3)
+        self.assertEqual(len(response.data), 1)
     
-    def test_list_appointments_empty(self):
-        """Testa listar quando não há consultas"""
-        response = self.client.get(self.list_create_url)
+    def test_get_appointment_by_id_success(self):
+        self.client.force_authenticate(user=self.normal_user)
+        
+        response = self.client.get(self.url)
         
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 0)
+        self.assertEqual(response.data['id'], self.appointment.id)
+        self.assertEqual(response.data['date'], str(self.future_date))
     
-    def test_retrieve_appointment(self):
-        """Testa buscar uma consulta específica"""
-        appointment = Appointments.objects.create(
-            date=date(2025, 12, 25),
-            health_professional=self.professional
+    def test_filter_appointments_by_professional(self):
+        #este de filtro de agendamentos por profissional
+        self.client.force_authenticate(user=self.normal_user)
+        
+        # Cria outro profissional e agendamento
+        another_professional = HealthProfessional.objects.create(
+            social_name='Dr. João Santos',
+            profession='Psiquiatra',
+            address='Av. Paulista, 1000',
+            contact='(11) 98888-8888'
+        )
+        Appointments.objects.create(
+            date=date.today() + timedelta(days=7),
+            health_professional=another_professional
         )
         
-        response = self.client.get(self.get_detail_url(appointment.id))
+        # Filtra por profissional
+        url = f"{self.list_url}?health_professional={self.health_professional.id}"
+        response = self.client.get(url)
         
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data['id'], appointment.id)
-        self.assertEqual(response.data['date'], '2025-12-25')
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]['health_professional'], self.health_professional.id)
     
-    def test_retrieve_appointment_not_found(self):
-        """Testa buscar consulta inexistente"""
-        response = self.client.get(self.get_detail_url(99999))
+    def test_get_nonexistent_appointment(self):
+        self.client.force_authenticate(user=self.normal_user)
+        
+        nonexistent_url = reverse('appointments-detail-view', kwargs={'pk': 9999})
+        response = self.client.get(nonexistent_url)
         
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    #TESTS UPDATE
     
-    
-    def test_update_appointment_put(self):
-        """Testa atualizar consulta completamente (PUT)"""
-        appointment = Appointments.objects.create(
-            date=date(2025, 12, 25),
-            health_professional=self.professional
-        )
+    def test_update_appointment_success(self):
+        self.client.force_authenticate(user=self.normal_user)
         
+        new_date = date.today() + timedelta(days=15)
         data = {
-            'date': '2025-12-31',
-            'health_professional': self.professional.id
+            "date": str(new_date),
+            "health_professional": self.health_professional.id
         }
-        response = self.client.put(self.get_detail_url(appointment.id), data, format='json')
+        
+        response = self.client.put(self.url, data, format='json')
         
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        appointment.refresh_from_db()
-        self.assertEqual(appointment.date, date(2025, 12, 31))
+        self.assertEqual(response.data['date'], str(new_date))
     
-    def test_update_appointment_patch(self):
-        """Testa atualizar parcialmente (PATCH)"""
-        appointment = Appointments.objects.create(
-            date=date(2025, 12, 25),
-            health_professional=self.professional
-        )
+    def test_partial_update_appointment_success(self):
+        self.client.force_authenticate(user=self.normal_user)
         
-        response = self.client.patch(
-            self.get_detail_url(appointment.id),
-            {'date': '2025-12-28'},
-            format='json'
-        )
+        new_date = date.today() + timedelta(days=20)
+        data = {"date": str(new_date)}
+        
+        response = self.client.patch(self.url, data, format='json')
         
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        appointment.refresh_from_db()
-        self.assertEqual(appointment.date, date(2025, 12, 28))
+        self.assertEqual(response.data['date'], str(new_date))
     
-    def test_update_appointment_not_found(self):
-        """Testa atualizar consulta inexistente"""
-        response = self.client.patch(
-            self.get_detail_url(99999),
-            {'date': '2025-12-31'},
-            format='json'
-        )
+    def test_update_appointment_with_past_date(self):
+        self.client.force_authenticate(user=self.normal_user)
+        
+        past_date = date.today() - timedelta(days=3)
+        data = {
+            "date": str(past_date),
+            "health_professional": self.health_professional.id
+        }
+        
+        response = self.client.put(self.url, data, format='json')
+        
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+    
+    def test_update_nonexistent_appointment(self):
+        #Teste de atualização de agendamento inexistente
+        self.client.force_authenticate(user=self.normal_user)
+        
+        nonexistent_url = reverse('appointments-detail-view', kwargs={'pk': 9999})
+        data = {
+            "date": str(date.today() + timedelta(days=10)),
+            "health_professional": self.health_professional.id
+        }
+        
+        response = self.client.put(nonexistent_url, data, format='json')
         
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    #TESTS DELETE 
     
-    
-    def test_delete_appointment(self):
-        """Testa deletar consulta"""
-        appointment = Appointments.objects.create(
-            date=date(2025, 12, 25),
-            health_professional=self.professional
-        )
+    def test_delete_appointment_success(self):
+        #Teste de exclusão de agendamento com sucesso
+        self.client.force_authenticate(user=self.normal_user)
         
-        self.assertEqual(Appointments.objects.count(), 1)
-        
-        response = self.client.delete(self.get_detail_url(appointment.id))
+        response = self.client.delete(self.url)
         
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertEqual(Appointments.objects.count(), 0)
     
-    def test_delete_appointment_not_found(self):
-        """Testa deletar consulta inexistente"""
-        response = self.client.delete(self.get_detail_url(99999))
+    def test_delete_nonexistent_appointment(self):
+        #Teste de exclusão de agendamento inexistente
+        self.client.force_authenticate(user=self.normal_user)
+        
+        nonexistent_url = reverse('appointments-detail-view', kwargs={'pk': 9999})
+        response = self.client.delete(nonexistent_url)
         
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    # TESTS without AUTH
     
+    def test_unauthorized_create_appointment(self):
+        data = {
+            "date": str(date.today() + timedelta(days=10)),
+            "health_professional": self.health_professional.id
+        }
+        
+        response = self.client.post(self.list_url, data, format='json')
+        
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
     
-    def test_filter_by_professional(self):
-        """Testa buscar consultas por profissional específico"""
-        # Cria outro profissional
-        other_professional = HealthProfessional.objects.create(
-            social_name='Dr. Pedro Souza',
-            profession='Dentista',
-            address='Rua B, 456',
-            contact='11977777777'
-        )
+    def test_unauthorized_list_appointments(self):
+        response = self.client.get(self.list_url)
         
-        # Cria consultas para ambos
-        Appointments.objects.create(date=date(2025, 12, 25), health_professional=self.professional)
-        Appointments.objects.create(date=date(2025, 12, 26), health_professional=self.professional)
-        Appointments.objects.create(date=date(2025, 12, 27), health_professional=other_professional)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+    
+    def test_unauthorized_get_appointment(self):
+        response = self.client.get(self.url)
         
-        # Filtra pelo primeiro profissional
-        url = f'{self.list_create_url}?health_professional={self.professional.id}'
-        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+    
+    def test_unauthorized_update_appointment(self):
+        data = {
+            "date": str(date.today() + timedelta(days=10)),
+            "health_professional": self.health_professional.id
+        }
         
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 2)
+        response = self.client.put(self.url, data, format='json')
         
-        # Verifica se todas são do profissional correto
-        for appointment in response.data:
-            self.assertEqual(appointment['health_professional'], self.professional.id)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+    
+    def test_unauthorized_delete_appointment(self):
+        response = self.client.delete(self.url)
+        
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
