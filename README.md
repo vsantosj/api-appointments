@@ -8,201 +8,159 @@
 
 1. Setup do Ambiente
 2. Instruções para Rodar o Projeto
-3. Testes Automatizados
-4. Decisões Técnicas
+3. 3. Documentação da API (Swagger)
+4. Testes Automatizados
 5. Deploy e CI/CD
-6. Melhorias Propostas
-7. Agradecimentos
-8. Como Contribuir com o projeto
+6. Justificativa técnica e estratégia e de Rollback
+7. Desafios e Soluções
+8. Melhorias Propostas
+9. Agradecimentos
+10. Como Contribuir com o projeto
 
 ### 1. Setup do ambiente
 
 #### Pré-requisitos
 
-- Docker e Docker Compose instalados.
-- Git para clonagem.
-- Arquivo .env.dev configurado na pasta dotenv_files/.
+- *Docker* ([instalação](https://docs.docker.com/get-docker/)) e *Docker Compose* ([instalação](https://docs.docker.com/compose/install/))
+- *Git* ([download](https://git-scm.com/downloads))
+- *Python 3.12+* ([download](https://www.python.org/downloads/)) - opcional para desenvolvimento local
+- *Poetry* ([instalação](https://python-poetry.org/docs/#installation)) - gerenciador de dependências
+- Arquivo .env configurado ([configuração inicial](#configuração-inicial))
 
 #### Configuração Inicial
 
-a. Clone o repositório:
+##### Clone o repositório:
+```` bash
+git clone --single-branch -b main git@github.com:vsantosj/api-appointments.git 
 
-```bash
-git clone <url-do-repositorio>
+#entre na pasta
 cd api-appointments
-
-# instalar as dependências do projeto
-poetry install
-```
-
-b. Configure as variáveis de ambiente: Crie o arquivo .env.dev dentro da pasta dotenv_files/ seguindo o modelo do .env.example.
+````
+##### Crie o arquivo . env apartir do .env.example
+a. No Windows
+```` bash
+Copy-Item dotenv_files\.env.example dotenv_files\.env
+````
+b. No Linux
+```` bash
+cp dotenv_files/.env.example dotenv_files/.env
+````
+> **Nota:**  Se preferir altere os valores das variaveis de ambiente ou utilize como está para testes.
 
 ### 2. Instruções para Rodar o Projeto
+```` bash
+docker-compose up -d
+````
+> **Nota:** A primeira execução pode levar alguns minutos para baixar as imagens e construir os containers. Aguarde até que todos os serviços sejam iniciados com sucesso.
+#### Crie um superusuário
 
-#### a. Rodar com docker
+````bash
+docker exec -it api-appointments  poetry run python manage.py createsuperuser
 
-```bash
-docker compose up -d --build
-```
+# adicione usuário e senha 
+````
+#### Demonstração criar super user
 
-#### b. Acesse a Aplicação
 
-Após rodar aplicação com sucesso a api:
-acesse:
+### 3. Documentação da API (Swagger)
 
-- Swagger UI: http://localhost:8000/api/docs/
-- ReDoc: http://localhost:8000/api/redoc/
-- Admin: http://localhost:8000/admin/
+Após a inicialização dos containers, a API estará disponível nos seguintes endereços:
+- **Swagger UI:** http://localhost:8000/api/docs/
+- **ReDoc:** http://localhost:8000/api/redoc/
+- **Admin:** http://localhost:8000/admin/
+![imagem documentação swagger](./assets/nome-da-sua-imagem.png)
 
-Login de acesso:
+### 4. Testes Automatizados
+A API contém 32 testes automatizados utilizando APITestCase do Django REST Framework.
+#### Cobertura de Testes
+##### Professionals (16 testes)
+- Autenticação: Acesso não autorizado (GET, PUT, DELETE)
+- CRUD: Criar, listar, buscar, atualizar (PUT/PATCH) e deletar profissionais
+- Validações: Dados inválidos, campos obrigatórios faltando
+- Edge cases: Recursos inexistentes (404)
+##### Agendamentos (16 testes)
+- Autenticação: Controle de acesso para operações CRUD
+- CRUD: Criar, listar, buscar, atualizar e deletar agendamentos
+- Filtros: Busca por profissional de saúde
+- Validações: Dados inválidos e campos obrigatórios
+- Edge cases: Agendamentos inexistentes
 
-```bash
-{
-  "username": "admin",
-  "password": "sua_senha_segura"
-}
-```
-
-### 3. Testes Automatizados
-
-#### Testes no docker
-
-```
-docker compose exec api python manage.py test
-```
-
-### 4. Decisões Técnicas
-
-1. Arquitetura e Design
-   Django REST Framework
-   Decisão: Usar Django REST Framework em vez de FastAPI ou Flask.
-   Justificativa:
-
-- Maturidade: Framework consolidado com 10+ anos
-- Documentação: Excelente documentação e comunidade ativa
-- Baterias Incluídas: Admin, ORM, autenticação out-of-the-box
-- Serializers: Validação robusta e automática
-- Browsable API: Interface web para testar endpoints
-
-JWT (SimpleJWT)
-Decisão: Usar JWT em vez de sessões Django.
-Justificativa:
-
-- Stateless: Não requer armazenamento de sessões
-- Escalável: Facilita microsserviços futuros
-- Mobile-friendly: Ideal para apps mobile
-- Padrão: Amplamente adotado na indústria
-
+#### Comando para executar os testes
+````bash
+docker exec -it api-appointments poetry run python manage.py test
+````
+##### Exemplo de saída no terminal
+![Exemplo de saída no terminal](./assets/nome-da-sua-imagem.png) 
 ### 5. Deploy e CI/CD
+Pipeline automatizado configurado com GitHub Actions que executa em push/PR nas branches main e develop.
+#### Fluxo do Pipeline
+1. **Lint** 
+- **O que faz:** Verifica qualidade do código com Flake8
+- **Valida:** Padrões de código Python (PEP 8)
+- **Ignora:** Migrações, linha longa (E501)
 
-Embora o foco atual seja o ambiente local, a estrutura foi preparada para produção:
+2. **Test**
+- **O que faz:** Executa testes automatizados
+- **Ambiente:** PostgreSQL 16 temporário
+- **Framework:** Pytest + Django
+- **Roda:** Todos os testes em `*/tests/`
 
-- GitHub Actions: Configuração de workflow em `.github/workflows/ci-cd.yml` para validação de código (Pylint) e testes em cada commit.
+3. **Build**
+- **O que faz:** Valida se o projeto está pronto para deploy
+- **Depende de:** Lint + Test  estar OK
+- **Verifica:** 
+  - Coleta de arquivos estáticos
+  - Migrações pendentes
 
-- Configuração de Produção: Arquivo `docker-compose.prod.yml` pronto para ser utilizado com Nginx como Proxy Reverso em instâncias AWS EC2.
+##### Quando executa?
+- Push na `main` ou `develop`
+- Pull Request para `main` ou `develop` 
 
-```bash
-docker compose exec -T web python manage.py migrate
-```
+### 6. Justificativa técnica e estratégia e de Rollback
 
-#### Exemplo de Saída dos Testes
+* **Versionamento de Imagens:** Adotei a prática de **Tags de Versão** (ex: `0.1.0`) no `docker-compose.yml` em vez de apenas utilizar `latest`. Isso garante que saibamos exatamente qual versão do código está rodando em cada momento.
 
-```bash
-$ python manage.py test
+#### Para garantir a continuidade do serviço em caso de falhas após um deploy, adotei a seguinte estratégia:
 
-Creating test database for alias 'default'...
-System check identified no issues (0 silenced).
-..........................
-----------------------------------------------------------------------
-Ran 26 tests in 20.565s
+##### 1. Reversão de Código (Docker Rollback)
+Como as imagens são versionadas com tags específicas:
+a.  Caso a versão atual (ex: `0.1.0`) apresente erro crítico, alteramos o campo `image:` no arquivo `docker-compose.yml` para a versão estável anterior (ex: `0.1.0`).
+##### 2.  Executamos o comando:
 
-OK
-Destroying test database for alias 'default'...
-```
+    docker-compose up -d
 
----
+O Docker substituirá o container defeituoso pela versão anterior em questão de segundos.
 
-#### Fluxo de deploy (CI/CD)
 
-```
-┌─────────────────────────────────────────────────────┐
-│  t=0s: Developer faz push para main                 │
-└─────────────────┬───────────────────────────────────┘
-                  │
-        ┌─────────▼──────────┐
-        │  GitHub detecta    │
-        │  inicia workflow   │
-        └─────────┬──────────┘
-                  │
-┌─────────────────▼───────────────────────────────────┐
-│  t=10s: JOB 1 - LINT                                │
-│  - Checkout código           (5s)                   │
-│  - Setup Python              (10s)                  │
-│  - Install Poetry            (15s)                  │
-│  - Install Dependencies      (30s)                  │
-│  - Run Pylint                (30s)                  │
-│  Total: ~1min 30s                                   │
-└─────────────────┬───────────────────────────────────┘
-                  │
-                  ├──❌ Score < 8.0 → FALHA (para aqui)
-                  │
-                  └──✅ Score >= 8.0 → Continua
-                            │
-        ┌─────────────────▼─────────────────┐
-        │  Aguarda Job Lint terminar        │
-        └─────────────────┬─────────────────┘
-                          │
-┌─────────────────────────▼───────────────────────────┐
-│  t=2min: JOB 2 - TESTS                              │
-│  - Start PostgreSQL service  (10s)                  │
-│  - Checkout código           (5s)                   │
-│  - Setup Python              (10s)                  │
-│  - Install Dependencies      (30s)                  │
-│  - Run Tests                 (120s)                 │
-│    • Creating test database                         │
-│    • Run 26 tests                                   │
-│    • Destroying test database                       │
-│  Total: ~3min                                       │
-└─────────────────────────┬───────────────────────────┘
-                          │
-                          ├──❌ Algum teste falhou → FALHA
-                          │
-                          └──✅ 26/26 testes OK → Continua
-                                    │
-                  ┌─────────────────▼─────────────────┐
-                  │  JOB 3 - DEPLOY (se ativo)        │
-                  │  - SSH para EC2          (5s)     │
-                  │  - Git pull              (10s)    │
-                  │  - Docker build          (120s)   │
-                  │  - Docker up             (30s)    │
-                  │  - Migrate               (10s)    │
-                  │  Total: ~3min                     │
-                  └─────────────────┬─────────────────┘
-                                    │
-                          ┌─────────▼─────────┐
-                          │  ✅ DEPLOY OK     │
-                          │  Aplicação no ar  │
-                          └───────────────────┘
+##### 3. Backup automático do banco antes de cada deploy + tags Git sincronizadas com versões Docker.
 
-TEMPO TOTAL (sem deploy): ~4-5 minutos
-TEMPO TOTAL (com deploy): ~7-10 minutos
-```
 
----
+### 7. Desafios e Soluções
 
-### 6. Melhorias Propostas
+#### Portabilidade do Ambiente Docker
+**Problema**: Incompatibilidades ao executar containers em diferentes arquiteturas (Windows vs Linux/WSL).
+
+**Solução:** Refinei o `Dockerfile` para usar uma imagem base mais leve e estável (`python:3.11-slim`) e garanti que todos os caminhos de volumes fossem relativos, eliminando dependências de caminhos absolutos do sistema hospedeiro.
+
+
+### 8. Melhorias Propostas
 
 - **Deploy na AWS**: Realizar o deploy da infraestrutura em uma instância EC2, utilizando o docker-compose.prod.yml e configurando o Nginx como Proxy Reverso.
+- **RDS PostgreSQL**: Banco gerenciado com backups automáticos e Multi-AZ
 - **Cache com Redis**: Integrar o Redis para cachear consultas frequentes, como a listagem de profissionais de saúde, melhorando o tempo de resposta da API.
 
-### 7. Agradecimentos
+### 9. Agradecimentos
 
 Meu sincero agradecimento à Lacrei Saúde pela oportunidade de aprendizado e desenvolvimento. Este projeto foi fundamental para consolidar meus conhecimentos em infraestrutura moderna e automação. É uma honra poder apoiar tecnicamente uma ONG que realiza um trabalho tão vital para a comunidade.
 
 🏳️‍🌈 Conheça o projeto: https://lacreisaude.com.br/
 
-### 8. 🤝 Como Contribuir com o projeto
+
+### 10. 🤝 Como Contribuir com o projeto
 
 Quer contribuir com a api de agendamentos? Toda ajuda é bem-vinda! Aqui estão algumas formas de colaborar:
 
 Para mais detalhes sobre como contribuir, consulte o arquivo [CONTRIBUTING.md](.github/CONTRIBUTING.md).
+
+
+Desenvolvido por Viviane Santos 
