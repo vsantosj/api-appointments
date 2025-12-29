@@ -1,11 +1,12 @@
 from rest_framework import generics
 from drf_spectacular.utils import extend_schema
+import logging
 from health_professionals.models import HealthProfessional
 from health_professionals.serializers import HealthProfessionalModelSerializers
 
-import logging
 
 logger = logging.getLogger(__name__)
+
 
 @extend_schema(tags=['Profissionais'])
 class HealthProfessionalCreateView(generics.ListCreateAPIView):
@@ -31,7 +32,7 @@ class HealthProfessionalCreateView(generics.ListCreateAPIView):
 class HealthProfessionalRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
     queryset = HealthProfessional.objects.all()
     serializer_class = HealthProfessionalModelSerializers
-    
+
     @extend_schema(summary="Busca um profissional específico pelo ID")
     def get(self, request, *args, **kwargs):
         professional_id = kwargs.get('pk')

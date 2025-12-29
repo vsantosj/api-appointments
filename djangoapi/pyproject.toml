@@ -17,6 +17,7 @@ drf-spectacular-sidecar = ">=2025.12.1"
 django-filter = ">=25.2"
 djangorestframework-simplejwt = ">=5.5.1"
 dotenv = "^0.9.9"
+flake8 = "^7.3.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = ">=9.0.2"

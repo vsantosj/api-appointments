@@ -1,22 +1,22 @@
 from django.db import models
 
 
-
 class HealthProfessional(models.Model):
+
     social_name = models.CharField(
-        max_length=200, 
+        max_length=200,
         verbose_name='Nome social',
         null=False, blank=False
     )
     profession = models.CharField(
-        max_length=100, 
+        max_length=100,
         verbose_name='Profissão'
     )
     address = models.TextField(
         verbose_name='Endereço'
     )
     contact = models.CharField(
-        max_length=100, 
+        max_length=100,
         verbose_name='Contato'
     )
 
@@ -37,12 +37,10 @@ class HealthProfessional(models.Model):
     def clean(self):
         if self.social_name:
             self.social_name = ' '.join(self.social_name.split())
-        
+
         if self.profession:
             self.profession = self.profession.strip().title()
-        
         if self.contact:
             self.contact = self.contact.strip()
-        
         if self.address:
             self.address = self.address.strip()

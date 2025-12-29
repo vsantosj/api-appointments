@@ -8,13 +8,13 @@ from appointments.models import Appointments
 
 logger = logging.getLogger(__name__)
 
+
 @extend_schema(tags=['Appointments'])
 class AppointmentsCreateView(generics.ListCreateAPIView):
     queryset = Appointments.objects.all()
     serializer_class = AppointmentsModelSerializers
     filter_backends = [DjangoFilterBackend]
-    filterset_fields = ['health_professional'] 
-
+    filterset_fields = ['health_professional']
 
     @extend_schema(
         summary="Lista ou cria Agendamentos",
@@ -38,8 +38,6 @@ class AppointmentsCreateView(generics.ListCreateAPIView):
     def get(self, request, *args, **kwargs):
         logger.info(f"Usuário {request.user} listando agendamentos")
         return super().get(request, *args, **kwargs)
-    
-
 
 
 @extend_schema(tags=['Appointments'])
@@ -50,6 +48,7 @@ class AppointmentsRetrieveUpdateDestroyAPIView(generics.RetrieveUpdateDestroyAPI
     @extend_schema(summary="Busca um Agendamento específico pelo ID")
     def get(self, request, *args, **kwargs):
         return super().get(request, *args, **kwargs)
+
     @extend_schema(summary="Atualiza os dados de um agendamento (PUT)")
     def put(self, request, *args, **kwargs):
         appointment_id = kwargs.get('pk')
@@ -59,9 +58,9 @@ class AppointmentsRetrieveUpdateDestroyAPIView(generics.RetrieveUpdateDestroyAPI
     @extend_schema(summary="Atualiza parcialmente um agendamento (PATCH)")
     def patch(self, request, *args, **kwargs):
         return super().patch(request, *args, **kwargs)
-    
+
     @extend_schema(summary="Remove um agendamento do sistema")
     def delete(self, request, *args, **kwargs):
-            appointment_id = kwargs.get('pk')
-            logger.warning(f"Usuário {request.user} deletando agendamento ID: {appointment_id}")
-            return super().delete(request, *args, **kwargs)
+        appointment_id = kwargs.get('pk')
+        logger.warning(f"Usuário {request.user} deletando agendamento ID: {appointment_id}")
+        return super().delete(request, *args, **kwargs)

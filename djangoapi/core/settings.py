@@ -4,14 +4,10 @@ from django.core.exceptions import ImproperlyConfigured
 from datetime import timedelta
 
 
-
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
 SECRET_KEY = os.getenv('SECRET_KEY')
-
-
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = bool(int(os.getenv('DEBUG', 0)))
@@ -30,18 +26,13 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-
-    
     'drf_spectacular',
     'drf_spectacular_sidecar',
-
-    'django_filters', 
-
+    'django_filters',
     'rest_framework',
     'rest_framework_simplejwt',
     'rest_framework_simplejwt.token_blacklist',
     'corsheaders',
-
     'health_professionals',
     'appointments',
     'authentication'
@@ -85,16 +76,17 @@ def get_env_variable(var_name):
     try:
         return os.environ[var_name]
     except KeyError:
-        # Se estiver em DEBUG, pode retornar um padrão, 
+        # Se estiver em DEBUG, pode retornar um padrão,
         # se não, trava o sistema por segurança.
         if DEBUG:
-            return "config_local" 
+            return "config_local"
         error_msg = f"A variável de ambiente {var_name} não está definida."
         raise ImproperlyConfigured(error_msg)
 
+
 DATABASES = {
     'default': {
-        
+
         'ENGINE': os.getenv('DB_ENGINE'),
         'PORT': os.getenv('POSTGRES_PORT'),
 
@@ -122,8 +114,6 @@ AUTH_PASSWORD_VALIDATORS = [
         "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
     },
 ]
-
-
 
 
 LANGUAGE_CODE = "pt-br"
@@ -161,25 +151,17 @@ REST_FRAMEWORK = {
     ],
 }
 
-#CONFIGURAÇÃO DE JWT
 # Define tempo de vida dos tokens de autenticação
-
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),  # Token expira em 1 hora
     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),     # Refresh expira em 1 dia
     'ROTATE_REFRESH_TOKENS': True,                   # Gera novo refresh a cada uso
     'BLACKLIST_AFTER_ROTATION': True,                # Invalida refresh antigo
     'UPDATE_LAST_LOGIN': True,                       # Atualiza último login
-    
     'ALGORITHM': 'HS256',
     'SIGNING_KEY': SECRET_KEY,
     'AUTH_HEADER_TYPES': ('Bearer',),
 }
-
-
-#CONFIGURAÇÃO DE CORS
-# Permite requisições de origens específicas para proteger dados sensíveis de saúde
-
 if DEBUG:
     # Desenvolvimento: permite localhost nas portas comuns de frontend
     CORS_ALLOWED_ORIGINS = [
