@@ -1,8 +1,7 @@
 services:
   djangoapi:
-    container_name: djangoapi
-    build:
-      context: .
+    build: .
+    restart: always
     ports:
       - 8000:8000
     volumes:
@@ -13,8 +12,9 @@ services:
       - psql
 
   psql:
-    container_name: psql
     image: postgres:15-alpine
+    ports:
+      - 5432:5432
     volumes:
       - ./data/postgres/data:/var/lib/postgresql/data/
     env_file:

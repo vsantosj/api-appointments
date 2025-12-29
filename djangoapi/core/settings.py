@@ -3,6 +3,8 @@ import os
 from django.core.exceptions import ImproperlyConfigured
 from datetime import timedelta
 
+
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -92,11 +94,10 @@ def get_env_variable(var_name):
 
 DATABASES = {
     'default': {
-        # ENGINE e PORT podem ter padrões seguros
-        'ENGINE': os.getenv('DB_ENGINE', 'django.db.backends.postgresql'),
-        'PORT': os.getenv('POSTGRES_PORT', '5432'),
         
-        # Nome, User, Password e Host DEVEM vir do ambiente (Segurança)
+        'ENGINE': os.getenv('DB_ENGINE'),
+        'PORT': os.getenv('POSTGRES_PORT'),
+
         'NAME': get_env_variable('POSTGRES_DB'),
         'USER': get_env_variable('POSTGRES_USER'),
         'PASSWORD': get_env_variable('POSTGRES_PASSWORD'),
