@@ -66,7 +66,7 @@ class HealthProfessionalModelSerializers(serializers.ModelSerializer):
             )
         if len(value) < 11:
             raise serializers.ValidationError(
-                'O contato deve ter pelo menos 8 caracteres.'
+                'O contato deve ter pelo menos 11 caracteres.'
             )
 
         only_digits = re.sub(r'\D', '', value)
