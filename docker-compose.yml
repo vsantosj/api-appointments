@@ -1,6 +1,8 @@
 services:
   djangoapi:
     build: .
+    image: api-appointments:0.1
+    container_name: api-appointments
     restart: always
     ports:
       - 8000:8000
